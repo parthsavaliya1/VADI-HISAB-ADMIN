@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { Check, Eye, Search, ShoppingBasket, X } from "lucide-react"
+import { Check, Eye, Filter, Search, ShoppingBasket, X } from "lucide-react"
 import { getListings, moderateListing } from "../api"
 import type { MarketListing } from "../api"
 import EmptyState from "../components/EmptyState"
@@ -13,7 +13,7 @@ function labelOf(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
-export default function ListingsPage({ onOpenUser }: { onOpenUser: (userId: string) => void }) {
+export default function ListingsPage({ onView }: { onView: (listing: MarketListing) => void }) {
   const [search, setSearch] = useState("")
   const [appliedSearch, setAppliedSearch] = useState("")
   const [status, setStatus] = useState("all")
@@ -102,45 +102,65 @@ export default function ListingsPage({ onOpenUser }: { onOpenUser: (userId: stri
           </label>
           <div className="filter-actions">
             <button type="button" className="clear-link" onClick={() => { setSearch(""); setAppliedSearch(""); setCategory("all"); setStatus("all"); setPage(1) }}>Clear Filters</button>
-            <button type="button" className="primary apply" onClick={() => { setAppliedSearch(search.trim()); setPage(1) }}>Apply Filters</button>
+            <button type="button" className="primary apply" onClick={() => { setAppliedSearch(search.trim()); setPage(1) }}><Filter size={15} /> Apply Filters</button>
           </div>
         </div>
 
         {error && <div className="alert error">{error}</div>}
-        {busy ? <Loading /> : !items.length ? <EmptyState title="No listings" detail="Nothing matches this filter." /> : (
-          <div className="listing-grid">
-            {items.map((item) => {
-              const place = [item.user?.village, item.user?.district].filter(Boolean).join(", ")
-              return (
-                <article className="listing-card" key={item.id}>
-                  <div className="listing-photo">
-                    {item.image ? <img src={item.image} alt="" /> : <ShoppingBasket />}
-                    <span className={`status ${item.status}`}>{item.status}</span>
-                  </div>
-                  <div className="listing-body">
-                    <small>{labelOf(item.category)}</small>
-                    <h3>{item.title}</h3>
-                    <p>{item.description || "No description"}</p>
-                    <strong>{item.price == null ? "Price on request" : money(item.price)}</strong>
-                    <button type="button" className="listing-farmer" onClick={() => item.user && onOpenUser(item.user.id)} disabled={!item.user}>
-                      <span className="avatar">{(item.user?.name || "V").charAt(0)}</span>
-                      <span>
-                        <b>{item.user?.name || "Unknown farmer"}</b>
-                        <em>{place || "Location not set"} · {formatDate(item.createdAt)}</em>
-                      </span>
-                      <Eye size={16} />
-                    </button>
-                    {item.status === "pending" && (
-                      <div className="listing-actions">
-                        <button type="button" className="secondary" onClick={() => review(item.id, "rejected")}><X size={14} /> Reject</button>
-                        <button type="button" className="primary" onClick={() => review(item.id, "approved")}><Check size={14} /> Approve</button>
-                      </div>
-                    )}
-                    {item.status === "rejected" && item.rejectionReason && <em className="reject-note">{item.rejectionReason}</em>}
-                  </div>
-                </article>
-              )
-            })}
+        {busy ? <Loading /> : !items.length ? <EmptyState title="No listings found" detail="Try another search or clear the filters." /> : (
+          <div className="table-wrap">
+            <table className="directory-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Listing</th>
+                  <th>Farmer</th>
+                  <th>Mobile</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Location</th>
+                  <th>Posted</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => {
+                  const place = [item.user?.village, item.user?.district].filter(Boolean).join(", ")
+                  return (
+                    <tr key={item.id}>
+                      <td className="mono">{item.id.slice(0, 8)}</td>
+                      <td>
+                        <div className="user-cell">
+                          <div>
+                            <b>{item.title}</b>
+                            <small>{item.description || labelOf(item.category)}</small>
+                          </div>
+                        </div>
+                      </td>
+                      <td>{item.user?.name || "—"}</td>
+                      <td>{item.user?.phone ? `+91 ${item.user.phone}` : "—"}</td>
+                      <td><span className="badge">{labelOf(item.category)}</span></td>
+                      <td>{item.price == null ? "—" : money(item.price)}</td>
+                      <td>{place || "—"}</td>
+                      <td>{formatDate(item.createdAt)}</td>
+                      <td><span className={`status ${item.status}`}>{item.status}</span></td>
+                      <td>
+                        <div className="row-actions">
+                          <button type="button" className="icon-button" title="View listing" onClick={() => onView(item)}><Eye size={16} /></button>
+                          {item.status === "pending" && (
+                            <>
+                              <button type="button" className="icon-button" title="Approve" onClick={() => review(item.id, "approved")}><Check size={16} /></button>
+                              <button type="button" className="icon-button" title="Reject" onClick={() => review(item.id, "rejected")}><X size={16} /></button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         )}
         <Pager page={page} pages={pages} total={total} limit={limit} noun="listings" onPage={setPage} onLimit={(next) => { setLimit(next); setPage(1) }} />

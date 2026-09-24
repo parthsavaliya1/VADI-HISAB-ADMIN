@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { getMe, session } from "./api"
-import type { SessionUser } from "./api"
+import type { MarketListing, SessionUser } from "./api"
 import Header from "./components/Header"
 import Loading from "./components/Loading"
 import Login from "./components/Login"
@@ -8,6 +8,7 @@ import Sidebar from "./components/Sidebar"
 import AccountsPage from "./pages/AccountsPage"
 import DashboardPage from "./pages/DashboardPage"
 import FarmerPage from "./pages/FarmerPage"
+import ListingViewPage from "./pages/ListingViewPage"
 import ListingsPage from "./pages/ListingsPage"
 import ReviewQueuePage from "./pages/ReviewQueuePage"
 import UsersPage from "./pages/UsersPage"
@@ -18,6 +19,7 @@ export default function App() {
   const [checking, setChecking] = useState(!!session.get())
   const [page, setPage] = useState<Page>("dashboard")
   const [profileUserId, setProfileUserId] = useState<string | null>(null)
+  const [listing, setListing] = useState<MarketListing | null>(null)
   const [mobileNav, setMobileNav] = useState(false)
   const [search, setSearch] = useState("")
 
@@ -32,7 +34,9 @@ export default function App() {
   if (checking) return <div className="app-loading"><Loading /></div>
   if (!authUser) return <Login onLogin={setAuthUser} />
 
-  const content = profileUserId
+  const content = listing
+    ? <ListingViewPage listing={listing} onBack={() => setListing(null)} />
+    : profileUserId
     ? <FarmerPage userId={profileUserId} onBack={() => setProfileUserId(null)} />
     : page === "dashboard"
     ? <DashboardPage search={search} onOpenUsers={() => setPage("users")} onOpenAccounts={() => setPage("accounts")} onOpenListings={() => setPage("listings")} />
@@ -41,12 +45,12 @@ export default function App() {
       : page === "accounts"
         ? <AccountsPage />
         : page === "listings"
-          ? <ListingsPage onOpenUser={setProfileUserId} />
+          ? <ListingsPage onView={setListing} />
           : <ReviewQueuePage kind="reports" />
 
   return (
     <div className="app-shell">
-      <Sidebar page={page} open={mobileNav} onNavigate={(next) => { setPage(next); setProfileUserId(null); setMobileNav(false) }} onClose={() => setMobileNav(false)} />
+      <Sidebar page={page} open={mobileNav} onNavigate={(next) => { setPage(next); setProfileUserId(null); setListing(null); setMobileNav(false) }} onClose={() => setMobileNav(false)} />
       <div className="main-shell">
         <Header user={authUser} query={search} onQuery={setSearch} onMenu={() => setMobileNav(true)} onSignOut={() => { session.clear(); setAuthUser(null) }} />
         <main className="content">{content}</main>

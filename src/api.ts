@@ -300,6 +300,7 @@ export type MarketListing = {
   price: number | null
   contactPhone?: string | null
   image: string | null
+  images?: string[]
   commentsCount: number
   rejectionReason?: string | null
   createdAt: string

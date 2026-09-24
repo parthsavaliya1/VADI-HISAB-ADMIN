@@ -205,7 +205,15 @@ footer { padding: 18px 28px; border-top: 1px solid #e7edea; color: #89968f; font
 .directory-table td { padding: 13px 12px; font-size: 13px; vertical-align: middle; }
 .directory-table tbody tr:hover { background: #f7fbf8; }
 .directory-table .mono { color: #8b9992; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.row-actions { display: flex; align-items: center; gap: 2px; }
 .icon-button { width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: #607168; display: grid; place-items: center; }
+.listing-view-photos { display: grid; gap: 12px; }
+.listing-view-photos img { width: 100%; max-height: 640px; object-fit: contain; border-radius: 14px; background: #10241b; }
+.image-modal { position: fixed; inset: 0; z-index: 50; background: rgba(16, 36, 27, .72); display: grid; place-items: center; padding: 24px; }
+.image-modal-card { position: relative; max-width: min(920px, 100%); max-height: 90vh; overflow: auto; background: #10241b; border-radius: 16px; padding: 36px 16px 16px; display: grid; gap: 12px; }
+.image-modal-card img { width: 100%; max-height: 78vh; object-fit: contain; border-radius: 12px; background: #000; }
+.image-modal-card .drawer-close { position: absolute; top: 8px; right: 8px; color: #fff; }
+.image-modal-card .muted { color: #d7ebe1; text-align: center; padding: 24px; }
 .icon-button:hover { background: #eef6f1; color: #12784d; }
 .avatar.tone-farmer { background: #e5f6ec; color: #14915a; }
 .avatar.tone-dealer { background: #f3e8ff; color: #7c3aed; }
