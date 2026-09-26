@@ -3,7 +3,7 @@ import { ArrowLeft, MapPin, Sprout, Tractor, Wallet } from "lucide-react"
 import { getFarmer, updateUser } from "../api"
 import type { FarmerRecord } from "../api"
 import Loading from "../components/Loading"
-import { formatDate, money, nameOf } from "../utils/format"
+import { formatDate, money, moneyExact, nameOf } from "../utils/format"
 
 function textList(value: unknown[]) {
   return value.map((item) => {
@@ -101,12 +101,12 @@ export default function FarmerPage({ userId, onBack }: { userId: string; onBack:
             <article>
               <Wallet size={16} />
               <span>Income</span>
-              <strong>{money(farmer.finance.income)}</strong>
+              <strong title={moneyExact(farmer.finance.income)}>{money(farmer.finance.income)}</strong>
             </article>
             <article>
               <Wallet size={16} />
               <span>Expense</span>
-              <strong>{money(farmer.finance.expense)}</strong>
+              <strong title={moneyExact(farmer.finance.expense)}>{money(farmer.finance.expense)}</strong>
             </article>
           </div>
 
@@ -207,7 +207,7 @@ export default function FarmerPage({ userId, onBack }: { userId: string; onBack:
                       <tr key={listing.id}>
                         <td>{listing.title}</td>
                         <td>{listing.category.replaceAll("_", " ")}</td>
-                        <td>{listing.price == null ? "—" : money(listing.price)}</td>
+                        <td title={listing.price == null ? undefined : moneyExact(listing.price)}>{listing.price == null ? "—" : money(listing.price)}</td>
                         <td><span className={`status ${listing.status}`}>{listing.status}</span></td>
                         <td>{formatDate(listing.createdAt)}</td>
                       </tr>

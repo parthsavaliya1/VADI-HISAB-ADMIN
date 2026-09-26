@@ -173,7 +173,7 @@ footer { padding: 18px 28px; border-top: 1px solid #e7edea; color: #89968f; font
 .stat-button .stat-card { width: 100%; transition: .16s ease; }
 .stat-button:hover .stat-card { transform: translateY(-2px); }
 .stat-button.active .stat-card { border-color: #16885b; box-shadow: 0 0 0 3px rgba(22, 136, 91, .14); }
-.stat-card { background: #fff; border: 1px solid #e6eeea; border-radius: 16px; padding: 16px; min-height: 154px; box-shadow: 0 8px 22px rgba(22, 48, 36, .04); }
+.stat-card { background: #fff; border: 1px solid #e6eeea; border-radius: 16px; padding: 16px; min-height: 154px; height: 100%; box-shadow: 0 8px 22px rgba(22, 48, 36, .04); overflow: hidden; min-width: 0; }
 .stat-top { display: flex; align-items: flex-start; justify-content: space-between; min-height: 40px; margin-bottom: 12px; }
 .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; }
 .stat-icon.green { background: #e7f7ee; color: #14915a; }
@@ -181,11 +181,11 @@ footer { padding: 18px 28px; border-top: 1px solid #e7edea; color: #89968f; font
 .stat-icon.blue { background: #e8f3fb; color: #2d74b8; }
 .stat-card > span, .stat-card strong, .stat-card small { display: block; }
 .stat-card > span { color: #6d7e75; font-size: 13px; font-weight: 600; }
-.stat-card strong { margin-top: 4px; font-size: 26px; letter-spacing: -.6px; line-height: 1.15; }
-.stat-card small { margin-top: 8px; font-size: 12px; font-weight: 700; color: #8b9992; }
+.stat-card strong { margin-top: 4px; font-size: 26px; letter-spacing: -.6px; line-height: 1.15; overflow-wrap: anywhere; }
+.stat-card small { margin-top: 8px; font-size: 12px; font-weight: 700; color: #8b9992; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .stat-card small.up { color: #14915a; }
 .stat-card small.down { color: #e15a52; }
-.sparkline { width: 92px; height: 36px; }
+.sparkline { width: 92px; max-width: 46%; height: 36px; display: block; }
 .spark-empty { width: 92px; height: 36px; }
 .data-card { background: #fff; border: 1px solid #e6eeea; border-radius: 18px; padding: 16px 16px 12px; box-shadow: 0 8px 22px rgba(22, 48, 36, .04); }
 .filter-grid { display: grid; grid-template-columns: minmax(220px, 1.5fr) repeat(5, minmax(130px, 1fr)); gap: 12px; }
@@ -252,11 +252,15 @@ footer { padding: 18px 28px; border-top: 1px solid #e7edea; color: #89968f; font
 .range-switch { display: flex; background: #fff; border-radius: 12px; padding: 4px; gap: 2px; }
 .range-switch button { border: 0; background: transparent; border-radius: 9px; padding: 8px 12px; font-size: 13px; font-weight: 700; color: #52645a; }
 .range-switch button.active { background: #16885b; color: #fff; }
+.range-dates { display: flex; gap: 8px; }
+.range-dates label { display: grid; gap: 4px; }
+.range-dates span { font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #3d5248; }
+.range-dates input { height: 36px; border: 0; border-radius: 10px; padding: 0 8px; background: #fff; color: #24352c; font-size: 12px; font-weight: 700; }
 .home-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .home-charts, .home-mid, .home-bottom { display: grid; gap: 14px; }
 .home-charts { grid-template-columns: 1.25fr 1fr .9fr; }
 .home-mid, .home-bottom { grid-template-columns: 1fr 1.15fr 1fr; }
-.home-card { background: #fff; border: 1px solid #e6eeea; border-radius: 16px; padding: 16px; box-shadow: 0 8px 22px rgba(22, 48, 36, .04); min-width: 0; }
+.home-card { background: #fff; border: 1px solid #e6eeea; border-radius: 16px; padding: 16px; box-shadow: 0 8px 22px rgba(22, 48, 36, .04); min-width: 0; overflow: hidden; }
 .home-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .home-card-head h2 { margin: 0; font-size: 16px; }
 .home-card-head span, .home-card-head button { border: 0; background: #f3f7f5; color: #607168; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; }
@@ -269,13 +273,14 @@ footer { padding: 18px 28px; border-top: 1px solid #e7edea; color: #89968f; font
 .growth-total em { font-style: normal; font-weight: 800; font-size: 12px; }
 .growth-total .up, .mini-table .income { color: #14915a; font-weight: 800; }
 .growth-total .down, .mini-table .expense { color: #e15a52; font-weight: 800; }
-.donut-layout { display: grid; grid-template-columns: 180px 1fr; gap: 8px; align-items: center; }
+.donut-layout { display: grid; grid-template-columns: minmax(0, 180px) minmax(0, 1fr); gap: 8px; align-items: center; }
 .donut-wrap { position: relative; }
 .donut-center { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; pointer-events: none; }
 .donut-center strong { font-size: 18px; }
 .donut-center span { color: #7d8c84; font-size: 12px; }
 .role-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.role-legend li { display: grid; grid-template-columns: 10px 1fr auto auto; gap: 8px; align-items: center; font-size: 13px; }
+.role-legend li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; font-size: 13px; min-width: 0; }
+.role-legend span, .role-legend b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .role-legend i { width: 10px; height: 10px; border-radius: 99px; }
 .role-legend small { color: #7d8c84; }
 .category-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
@@ -293,6 +298,7 @@ footer { padding: 18px 28px; border-top: 1px solid #e7edea; color: #89968f; font
 .status.approved, .status.active { color: #197c50; background: #e8f7ee; }
 .status.rejected, .status.blocked { color: #b64239; background: #fceceb; }
 .listings-filters { grid-template-columns: minmax(220px, 1.4fr) 220px 1fr; }
+.crop-filters { grid-template-columns: minmax(220px, 1fr) auto; align-items: end; }
 .listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .listing-card { border: 1px solid #e6eeea; border-radius: 16px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
 .listing-photo { height: 148px; background: #eef6f1; display: grid; place-items: center; color: #14915a; position: relative; }

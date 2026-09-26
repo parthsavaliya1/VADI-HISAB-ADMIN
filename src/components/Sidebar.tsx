@@ -1,5 +1,5 @@
 import { Leaf, X } from "lucide-react"
-import { LayoutDashboard, ShieldCheck, ShoppingBasket, UsersRound, Wallet } from "lucide-react"
+import { LayoutDashboard, ShieldCheck, ShoppingBasket, Stethoscope, UsersRound, Wallet } from "lucide-react"
 import type { Page } from "../types"
 
 const nav = [
@@ -7,6 +7,7 @@ const nav = [
   { id: "users" as Page, label: "Users", icon: UsersRound },
   { id: "accounts" as Page, label: "Income & Expense", icon: Wallet },
   { id: "listings" as Page, label: "Market Listings", icon: ShoppingBasket },
+  { id: "crop-doctor" as Page, label: "Crop Doctor", icon: Stethoscope },
   { id: "moderation" as Page, label: "Reports & Safety", icon: ShieldCheck },
 ]
 

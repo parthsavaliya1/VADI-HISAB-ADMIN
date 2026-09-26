@@ -6,6 +6,7 @@ import Loading from "./components/Loading"
 import Login from "./components/Login"
 import Sidebar from "./components/Sidebar"
 import AccountsPage from "./pages/AccountsPage"
+import CropDoctorPage from "./pages/CropDoctorPage"
 import DashboardPage from "./pages/DashboardPage"
 import FarmerPage from "./pages/FarmerPage"
 import ListingViewPage from "./pages/ListingViewPage"
@@ -46,7 +47,9 @@ export default function App() {
         ? <AccountsPage />
         : page === "listings"
           ? <ListingsPage onView={setListing} />
-          : <ReviewQueuePage kind="reports" />
+          : page === "crop-doctor"
+            ? <CropDoctorPage onOpenUser={setProfileUserId} />
+            : <ReviewQueuePage kind="reports" />
 
   return (
     <div className="app-shell">

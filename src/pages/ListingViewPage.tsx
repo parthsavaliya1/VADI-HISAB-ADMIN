@@ -1,6 +1,6 @@
 import { ArrowLeft, ShoppingBasket } from "lucide-react"
 import type { MarketListing } from "../api"
-import { formatDate, money } from "../utils/format"
+import { formatDate, money, moneyExact } from "../utils/format"
 
 function labelOf(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -17,7 +17,7 @@ export default function ListingViewPage({ listing, onBack }: { listing: MarketLi
         <div className="profile-fallback"><ShoppingBasket size={28} /></div>
         <div>
           <h1>{listing.title}</h1>
-          <p>{labelOf(listing.category)} · {listing.price == null ? "Price on request" : money(listing.price)}</p>
+          <p>{labelOf(listing.category)} · {listing.price == null ? "Price on request" : <span title={moneyExact(listing.price)}>{money(listing.price)}</span>}</p>
           <div className="profile-pills">
             <span className={`status ${listing.status}`}>{listing.status}</span>
             <span className="badge">{listing.user?.name || "Unknown farmer"}</span>

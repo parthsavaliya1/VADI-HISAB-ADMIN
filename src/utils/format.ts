@@ -1,7 +1,24 @@
 import type { AdminUser } from "../api"
 
+export function moneyExact(value: number) {
+  const amount = Number(value) || 0
+  const sign = amount < 0 ? "−" : ""
+  return `${sign}₹${Math.abs(amount).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`
+}
+
+function compactUnit(value: number) {
+  const digits = Number.isInteger(value) ? 0 : value >= 100 ? 1 : 2
+  return value.toFixed(digits).replace(/\.0+$/, "").replace(/(\.\d)0$/, "$1")
+}
+
 export function money(value: number) {
-  return `₹${value.toLocaleString("en-IN", { maximumFractionDigits: 2 })}`
+  const amount = Number(value) || 0
+  const sign = amount < 0 ? "−" : ""
+  const abs = Math.abs(amount)
+  if (abs >= 10000000) return `${sign}₹${compactUnit(abs / 10000000)}Cr`
+  if (abs >= 100000) return `${sign}₹${compactUnit(abs / 100000)}L`
+  if (abs >= 1000) return `${sign}₹${compactUnit(abs / 1000)}k`
+  return moneyExact(amount)
 }
 
 export function nameOf(user: AdminUser) {
@@ -36,7 +53,8 @@ export function percentChange(current: number, previous: number) {
 
 export function trendText(value: number) {
   const sign = value > 0 ? "+" : ""
-  return `${sign}${value.toFixed(1)}% vs last month`
+  const body = Math.abs(value) >= 999 ? `${sign}999%+` : `${sign}${value.toFixed(1)}%`
+  return `${body} vs last month`
 }
 
 export function monthLabel(month: string) {

@@ -8,7 +8,7 @@ import Loading from "../components/Loading"
 import PageHeading from "../components/PageHeading"
 import Pager from "../components/Pager"
 import StatCard from "../components/StatCard"
-import { formatDate, money, percentChange, trendText } from "../utils/format"
+import { formatDate, money, moneyExact, percentChange, trendText } from "../utils/format"
 
 const INCOME_CATEGORIES = ["Crop Sale", "Subsidy", "Rental Income", "Other"]
 const EXPENSE_CATEGORIES = ["Seed", "Fertilizer", "Pesticide", "Labour", "Machinery", "Irrigation", "Other"]
@@ -130,13 +130,13 @@ export default function AccountsPage() {
       />
       <div className="stat-grid">
         <button type="button" className={`stat-button ${applied.kind === "income" ? "active" : ""}`} onClick={() => applyFilters({ ...draft, kind: applied.kind === "income" ? "all" : "income", category: "all" })}>
-          <StatCard label="Total Income" value={money(summary.income)} note={trendText(percentChange(incomeTrend.current, incomeTrend.previous))} direction={incomeTrend.current >= incomeTrend.previous ? "up" : "down"} icon={TrendingUp} tone="green" points={incomePoints} />
+          <StatCard label="Total Income" value={money(summary.income)} title={moneyExact(summary.income)} note={trendText(percentChange(incomeTrend.current, incomeTrend.previous))} direction={incomeTrend.current >= incomeTrend.previous ? "up" : "down"} icon={TrendingUp} tone="green" points={incomePoints} />
         </button>
         <button type="button" className={`stat-button ${applied.kind === "expense" ? "active" : ""}`} onClick={() => applyFilters({ ...draft, kind: applied.kind === "expense" ? "all" : "expense", category: "all" })}>
-          <StatCard label="Total Expense" value={money(summary.expense)} note={trendText(percentChange(expenseTrend.current, expenseTrend.previous))} direction={expenseTrend.current <= expenseTrend.previous ? "up" : "down"} icon={TrendingDown} tone="red" points={expensePoints} />
+          <StatCard label="Total Expense" value={money(summary.expense)} title={moneyExact(summary.expense)} note={trendText(percentChange(expenseTrend.current, expenseTrend.previous))} direction={expenseTrend.current <= expenseTrend.previous ? "up" : "down"} icon={TrendingDown} tone="red" points={expensePoints} />
         </button>
         <button type="button" className={`stat-button ${applied.kind === "all" ? "active" : ""}`} onClick={() => applyFilters({ ...draft, kind: "all", category: "all" })}>
-          <StatCard label="Balance" value={money(summary.balance)} note="Income minus expense" icon={Wallet} tone="blue" points={balancePoints.slice(-6)} />
+          <StatCard label="Balance" value={money(summary.balance)} title={moneyExact(summary.balance)} note="Income minus expense" icon={Wallet} tone="blue" points={balancePoints.slice(-6)} />
         </button>
         <article className="stat-card plain">
           <div className="stat-top">
@@ -233,7 +233,7 @@ export default function AccountsPage() {
                     <td>{row.category}</td>
                     <td>{[row.user.village, row.user.district].filter(Boolean).join(", ") || "—"}</td>
                     <td className="notes">{row.notes || "—"}</td>
-                    <td className={`num ${row.kind}`}>{row.kind === "expense" ? "−" : "+"}{money(row.amount)}</td>
+                    <td className={`num ${row.kind}`} title={moneyExact(row.amount)}>{row.kind === "expense" ? "−" : "+"}{money(row.amount)}</td>
                     <td>
                       <button type="button" className="icon-button" title="View entry" onClick={() => setOpenRow(row)}><Eye size={16} /></button>
                     </td>
@@ -252,7 +252,7 @@ export default function AccountsPage() {
             <button type="button" className="drawer-close" onClick={() => setOpenRow(null)} aria-label="Close">×</button>
             <div className={`avatar tone-${openRow.kind}`}>{openRow.user.name.charAt(0).toUpperCase()}</div>
             <h2>{openRow.user.name}</h2>
-            <p className={openRow.kind === "expense" ? "amount-down" : "amount-up"}>
+            <p className={openRow.kind === "expense" ? "amount-down" : "amount-up"} title={moneyExact(openRow.amount)}>
               {openRow.kind === "expense" ? "−" : "+"}{money(openRow.amount)}
             </p>
             <dl>

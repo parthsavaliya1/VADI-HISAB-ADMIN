@@ -7,7 +7,7 @@ import Loading from "../components/Loading"
 import PageHeading from "../components/PageHeading"
 import Pager from "../components/Pager"
 import StatCard from "../components/StatCard"
-import { formatDate, money } from "../utils/format"
+import { formatDate, money, moneyExact } from "../utils/format"
 
 function labelOf(value: string) {
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())
@@ -141,7 +141,7 @@ export default function ListingsPage({ onView }: { onView: (listing: MarketListi
                       <td>{item.user?.name || "—"}</td>
                       <td>{item.user?.phone ? `+91 ${item.user.phone}` : "—"}</td>
                       <td><span className="badge">{labelOf(item.category)}</span></td>
-                      <td>{item.price == null ? "—" : money(item.price)}</td>
+                      <td title={item.price == null ? undefined : moneyExact(item.price)}>{item.price == null ? "—" : money(item.price)}</td>
                       <td>{place || "—"}</td>
                       <td>{formatDate(item.createdAt)}</td>
                       <td><span className={`status ${item.status}`}>{item.status}</span></td>

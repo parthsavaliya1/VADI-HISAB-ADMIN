@@ -350,6 +350,41 @@ export async function moderateListing(id: string, status: "approved" | "rejected
   })
 }
 
+export type CropDoctorUser = {
+  id: string
+  name: string
+  phone: string
+  village: string
+  district: string
+  role: string
+  questions: number
+  lastUsed: string | null
+}
+
+export type CropDoctorStats = {
+  summary: {
+    users: number
+    questions: number
+    usersToday: number
+    questionsToday: number
+    usersMonth: number
+    questionsMonth: number
+    expertWaiting: number
+  }
+  spark: Array<{ day: string; questions: number; users: number }>
+  users: CropDoctorUser[]
+  pagination: { page: number; limit: number; total: number; pages: number }
+}
+
+export async function getCropDoctor(params: { page?: number; limit?: number; search?: string } = {}) {
+  const query = new URLSearchParams()
+  query.set("page", String(params.page || 1))
+  query.set("limit", String(params.limit || 10))
+  if (params.search) query.set("search", params.search)
+  const result = await request<{ data: CropDoctorStats }>(`/admin/crop-doctor?${query}`)
+  return result.data
+}
+
 export async function sendBroadcast(payload: { title: string; body: string }) {
   return request<{ message?: string; sent?: number }>("/admin/broadcast", {
     method: "POST",

@@ -5,6 +5,7 @@ export default function StatCard({
   label,
   value,
   note,
+  title,
   direction,
   icon: Icon,
   tone,
@@ -13,6 +14,7 @@ export default function StatCard({
   label: string
   value: string
   note: string
+  title?: string
   direction?: "up" | "down"
   icon: LucideIcon
   tone: "green" | "red" | "blue"
@@ -26,7 +28,7 @@ export default function StatCard({
         <Sparkline points={points} color={color} />
       </div>
       <span>{label}</span>
-      <strong>{value}</strong>
+      <strong title={title}>{value}</strong>
       <small className={direction || ""}>{note}</small>
     </article>
   )

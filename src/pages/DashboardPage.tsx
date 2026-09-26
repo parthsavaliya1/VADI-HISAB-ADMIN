@@ -11,7 +11,7 @@ import type { DashboardData } from "../api"
 import EmptyState from "../components/EmptyState"
 import Loading from "../components/Loading"
 import StatCard from "../components/StatCard"
-import { formatDate, isoDaysAgo, money, monthLabel, nameOf, percentChange, timeAgo, todayIso, trendText } from "../utils/format"
+import { formatDate, isoDaysAgo, money, moneyExact, monthLabel, nameOf, percentChange, timeAgo, todayIso, trendText } from "../utils/format"
 
 const ROLE_COLORS = [
   { key: "farmer" as const, name: "Farmers", color: "#1f9d55" },
@@ -22,13 +22,7 @@ const ROLE_COLORS = [
 const BAR_COLORS = ["#1f9d55", "#7c3aed", "#f0b429", "#3b82c4", "#e15a52"]
 
 function axisMoney(value: unknown) {
-  const amount = Number(value) || 0
-  const sign = amount < 0 ? "-" : ""
-  const abs = Math.abs(amount)
-  if (abs >= 10000000) return `${sign}₹${(abs / 10000000).toFixed(abs % 10000000 === 0 ? 0 : 1)}Cr`
-  if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(abs % 100000 === 0 ? 0 : 1)}L`
-  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(abs % 1000 === 0 ? 0 : 1)}k`
-  return `${sign}₹${abs.toLocaleString("en-IN")}`
+  return money(Number(value) || 0)
 }
 
 function billStatus(paid: number, amount: number) {
@@ -87,26 +81,84 @@ export default function DashboardPage({
     setTo(range[1])
   }
 
+  function applyCustom(nextFrom: string, nextTo: string) {
+    if (!nextFrom || !nextTo) return
+    const start = nextFrom <= nextTo ? nextFrom : nextTo
+    const end = nextFrom <= nextTo ? nextTo : nextFrom
+    const latest = todayIso()
+    setPreset("custom")
+    setFrom(start > latest ? latest : start)
+    setTo(end > latest ? latest : end)
+  }
+
   if (error && !data) return <EmptyState title="Dashboard unavailable" detail={error} />
 
   const finance = data?.finance
-  const roles = data?.roles || { farmer: 0, dealer: 0, admin: 0, other: 0 }
+  const bucket = data?.range.bucket || "day"
+  const rangeStart = bucket === "month" ? from.slice(0, 7) : from
+  const rangeEnd = bucket === "month" ? to.slice(0, 7) : to
+  const growthKey = (date: string) => (bucket === "month" ? date.slice(0, 7) : date.slice(0, 10))
+  const inGrowthRange = (date: string) => {
+    const key = growthKey(date)
+    return key >= rangeStart && key <= rangeEnd
+  }
+  const istDay = (value?: string | null) => {
+    if (!value) return ""
+    const parsed = new Date(value)
+    if (Number.isNaN(parsed.getTime())) return String(value).slice(0, 10)
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(parsed)
+  }
+  const inSelectedDays = (value?: string | null) => {
+    const day = istDay(value)
+    return !!day && day >= from && day <= to
+  }
+  const rangedGrowth = (data?.growth || []).filter((item) => inGrowthRange(item.date))
+  const hasOutside = (data?.growth || []).some((item) => !inGrowthRange(item.date))
+  const sumGrowth = (key: "users" | "listings" | "dealerBills" | "farmers" | "dealers") => rangedGrowth.reduce((total, item) => total + (Number(item[key]) || 0), 0)
+  const periodUsers = hasOutside ? sumGrowth("users") : (data?.metrics.totalUsers || 0)
+  const periodListings = hasOutside ? sumGrowth("listings") : (data?.metrics.listings || 0)
+  const periodBills = hasOutside ? sumGrowth("dealerBills") : (data?.metrics.dealerBills || 0)
+  const recentUsers = (data?.recentUsers || []).filter((user) => !hasOutside || inSelectedDays(user.createdAt))
+  const recentListings = (data?.recentListings || []).filter((listing) => !hasOutside || inSelectedDays(listing.date))
+  const recentBills = (data?.recentBills || []).filter((bill) => !hasOutside || inSelectedDays(bill.date))
+  const roles = (() => {
+    if (!hasOutside) return data?.roles || { farmer: 0, dealer: 0, admin: 0, other: 0 }
+    if (recentUsers.length === periodUsers) {
+      return recentUsers.reduce((counts, user) => {
+        const role = user.role === "farmer" || user.role === "dealer" || user.role === "admin" ? user.role : "other"
+        counts[role] += 1
+        return counts
+      }, { farmer: 0, dealer: 0, admin: 0, other: 0 })
+    }
+    const farmers = sumGrowth("farmers")
+    const dealers = Math.min(sumGrowth("dealers"), Math.max(0, periodUsers - farmers))
+    return { farmer: farmers, dealer: dealers, admin: 0, other: Math.max(0, periodUsers - farmers - dealers) }
+  })()
   const roleTotal = roles.farmer + roles.dealer + roles.admin + roles.other
   const slices = ROLE_COLORS.map((item) => ({ ...item, value: roles[item.key] })).filter((item) => item.value > 0)
-  const rangeName = preset === "today" ? "Today" : preset === "7" ? "Last 7 days" : preset === "year" ? "This year" : "Last 30 days"
+  const shortDay = (value: string) => new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+  const rangeName = preset === "today"
+    ? "Today"
+    : preset === "7"
+      ? "Last 7 days"
+      : preset === "year"
+        ? "This year"
+        : preset === "custom"
+          ? (from === to ? shortDay(from) : `${shortDay(from)} – ${shortDay(to)}`)
+          : "Last 30 days"
   const axisLabel = (value: string) => value.length === 7
     ? monthLabel(value)
     : new Date(`${value}T00:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })
   const months = (finance?.months || []).map((item) => ({ ...item, label: axisLabel(item.month) }))
-  const signups = (data?.growth || []).map((item) => ({ label: axisLabel(data?.range.bucket === "month" ? item.date.slice(0, 7) : item.date), users: item.users }))
+  const signups = rangedGrowth.map((item) => ({ label: axisLabel(bucket === "month" ? item.date.slice(0, 7) : item.date), users: item.users }))
   const activity = [
-    ...(data?.recentUsers || []).slice(0, 2).map((user) => ({
+    ...recentUsers.slice(0, 2).map((user) => ({
       title: "New user registered",
       detail: `${nameOf(user)} · ${user.role}`,
       at: user.createdAt,
       tone: "green",
     })),
-    ...(data?.recentListings || []).slice(0, 2).map((listing) => ({
+    ...recentListings.slice(0, 2).map((listing) => ({
       title: "New market listing",
       detail: listing.title,
       at: listing.date || "",
@@ -145,6 +197,16 @@ export default function DashboardPage({
               <button key={id} type="button" className={preset === id ? "active" : ""} onClick={() => applyPreset(id)}>{label}</button>
             ))}
           </div>
+          <div className="range-dates">
+            <label>
+              <span>From</span>
+              <input type="date" value={from} max={to || todayIso()} onChange={(event) => applyCustom(event.target.value, to)} />
+            </label>
+            <label>
+              <span>To</span>
+              <input type="date" value={to} min={from || undefined} max={todayIso()} onChange={(event) => applyCustom(from, event.target.value)} />
+            </label>
+          </div>
         </div>
       </section>
 
@@ -152,11 +214,11 @@ export default function DashboardPage({
       {busy && !data ? <Loading /> : (
         <>
           <div className="stat-grid home-stats">
-            <StatCard label="Total Users" value={(data?.metrics.totalUsers || 0).toLocaleString("en-IN")} note={`${rangeName} · ${trendText(percentChange(data?.metrics.totalUsers || 0, data?.previousUsers || 0)).replace("last month", "previous period")}`} direction={(data?.metrics.totalUsers || 0) >= (data?.previousUsers || 0) ? "up" : "down"} icon={UsersRound} tone="green" points={signups.map((item) => item.users)} />
-            <StatCard label="Market Listings" value={(data?.metrics.listings || 0).toLocaleString("en-IN")} note={rangeName} icon={ShoppingBasket} tone="blue" points={(data?.growth || []).map((item) => item.listings)} />
-            <StatCard label="Dealer Bills" value={(data?.metrics.dealerBills || 0).toLocaleString("en-IN")} note={rangeName} icon={Receipt} tone="green" points={(data?.growth || []).map((item) => item.dealerBills)} />
-            <StatCard label="Total Income" value={money(finance?.income || 0)} note={`${rangeName} · ${trendText(percentChange(finance?.income || 0, finance?.previousIncome || 0)).replace("last month", "previous period")}`} direction={(finance?.income || 0) >= (finance?.previousIncome || 0) ? "up" : "down"} icon={Wallet} tone="green" points={months.map((item) => item.income)} />
-            <StatCard label="Total Expense" value={money(finance?.expense || 0)} note={`${rangeName} · ${trendText(percentChange(finance?.expense || 0, finance?.previousExpense || 0)).replace("last month", "previous period")}`} direction={(finance?.expense || 0) <= (finance?.previousExpense || 0) ? "up" : "down"} icon={CircleDollarSign} tone="red" points={months.map((item) => item.expense)} />
+            <StatCard label="Total Users" value={periodUsers.toLocaleString("en-IN")} note={`${rangeName} · ${trendText(percentChange(periodUsers, data?.previousUsers || 0)).replace("last month", "previous period")}`} direction={periodUsers >= (data?.previousUsers || 0) ? "up" : "down"} icon={UsersRound} tone="green" points={signups.map((item) => item.users)} />
+            <StatCard label="Market Listings" value={periodListings.toLocaleString("en-IN")} note={rangeName} icon={ShoppingBasket} tone="blue" points={rangedGrowth.map((item) => item.listings)} />
+            <StatCard label="Dealer Bills" value={periodBills.toLocaleString("en-IN")} note={rangeName} icon={Receipt} tone="green" points={rangedGrowth.map((item) => item.dealerBills)} />
+            <StatCard label="Total Income" value={money(finance?.income || 0)} title={moneyExact(finance?.income || 0)} note={`${rangeName} · ${trendText(percentChange(finance?.income || 0, finance?.previousIncome || 0)).replace("last month", "previous period")}`} direction={(finance?.income || 0) >= (finance?.previousIncome || 0) ? "up" : "down"} icon={Wallet} tone="green" points={months.map((item) => item.income)} />
+            <StatCard label="Total Expense" value={money(finance?.expense || 0)} title={moneyExact(finance?.expense || 0)} note={`${rangeName} · ${trendText(percentChange(finance?.expense || 0, finance?.previousExpense || 0)).replace("last month", "previous period")}`} direction={(finance?.expense || 0) <= (finance?.previousExpense || 0) ? "up" : "down"} icon={CircleDollarSign} tone="red" points={months.map((item) => item.expense)} />
           </div>
 
           <div className="home-charts">
@@ -164,11 +226,11 @@ export default function DashboardPage({
               <div className="home-card-head"><h2>Income vs Expense</h2><span>{rangeName}</span></div>
               <div className="chart-legend"><i className="swatch income" /> Income <i className="swatch expense" /> Expense</div>
               <ResponsiveContainer width="100%" height={230}>
-                <BarChart data={months} barGap={4} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
+                <BarChart data={months} barGap={4} margin={{ top: 22, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f0" />
-                  <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#607168" }} />
-                  <YAxis axisLine={false} tickLine={false} width={52} tick={{ fontSize: 11, fill: "#607168" }} tickFormatter={axisMoney} />
-                  <Tooltip formatter={(value) => money(Number(value || 0))} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={24} tick={{ fontSize: 11, fill: "#607168" }} />
+                  <YAxis axisLine={false} tickLine={false} width={58} tick={{ fontSize: 11, fill: "#607168" }} tickFormatter={axisMoney} domain={[0, (max: number) => Math.max(max * 1.12, 1)]} />
+                  <Tooltip formatter={(value) => moneyExact(Number(value || 0))} />
                   <Bar dataKey="income" name="Income" fill="#1f9d55" radius={[5, 5, 0, 0]} />
                   <Bar dataKey="expense" name="Expense" fill="#ef6b63" radius={[5, 5, 0, 0]} />
                 </BarChart>
@@ -179,14 +241,14 @@ export default function DashboardPage({
                 <h2>New Users</h2>
                 <span>{rangeName}</span>
               </div>
-              <p className="growth-total">Joined <strong>{(data?.metrics.totalUsers || 0).toLocaleString("en-IN")}</strong> <em>in {rangeName.toLowerCase()}</em></p>
+              <p className="growth-total">Joined <strong>{periodUsers.toLocaleString("en-IN")}</strong> <em>in {rangeName.toLowerCase()}</em></p>
               <ResponsiveContainer width="100%" height={210}>
-                <LineChart data={signups}>
+                <LineChart data={signups} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eef2f0" />
-                  <XAxis dataKey="label" axisLine={false} tickLine={false} />
-                  <YAxis axisLine={false} tickLine={false} width={36} allowDecimals={false} />
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={28} tick={{ fontSize: 11, fill: "#607168" }} />
+                  <YAxis axisLine={false} tickLine={false} width={40} allowDecimals={false} domain={[0, (max: number) => Math.max(Math.ceil(max * 1.2), 4)]} tick={{ fontSize: 11, fill: "#607168" }} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="users" name="New users" stroke="#1f9d55" strokeWidth={3} dot={{ r: 4, fill: "#1f9d55" }} />
+                  <Line type="monotone" dataKey="users" name="New users" stroke="#1f9d55" strokeWidth={3} dot={{ r: 3, fill: "#1f9d55" }} />
                 </LineChart>
               </ResponsiveContainer>
             </section>
@@ -238,10 +300,11 @@ export default function DashboardPage({
             </section>
             <section className="home-card">
               <div className="home-card-head"><h2>Recent Users</h2><button type="button" onClick={onOpenUsers}>View All</button></div>
+              {!recentUsers.length ? <p className="muted">No users joined in this range.</p> : (
               <table className="mini-table">
                 <thead><tr><th>User</th><th>Type</th><th>Location</th><th>Joined</th></tr></thead>
                 <tbody>
-                  {(data?.recentUsers || []).slice(0, 5).map((user) => (
+                  {recentUsers.slice(0, 5).map((user) => (
                     <tr key={user.id}>
                       <td>
                         <div className="user-cell">
@@ -256,20 +319,21 @@ export default function DashboardPage({
                   ))}
                 </tbody>
               </table>
+              )}
             </section>
             <section className="home-card">
               <div className="home-card-head"><h2>Recent Bills</h2><button type="button" onClick={onOpenListings}>View Listings</button></div>
-              {!data?.recentBills?.length ? <p className="muted">No dealer bills in this range.</p> : (
+              {!recentBills.length ? <p className="muted">No dealer bills in this range.</p> : (
                 <table className="mini-table">
                   <thead><tr><th>Bill</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
                   <tbody>
-                    {data.recentBills.map((bill) => {
+                    {recentBills.map((bill) => {
                       const status = billStatus(bill.paid, bill.amount)
                       return (
                         <tr key={bill.id}>
                           <td>#{bill.number}</td>
                           <td>{bill.customer}</td>
-                          <td>{money(bill.amount)}</td>
+                          <td title={moneyExact(bill.amount)}>{money(bill.amount)}</td>
                           <td><span className={`status ${status === "Paid" ? "active" : "blocked"}`}>{status}</span></td>
                         </tr>
                       )
@@ -292,7 +356,7 @@ export default function DashboardPage({
                         <td>{formatDate(entry.date)}</td>
                         <td><span className={`badge ${entry.kind}`}>{entry.kind}</span></td>
                         <td>{entry.category}</td>
-                        <td className={entry.kind}>{entry.kind === "expense" ? "−" : "+"}{money(entry.amount)}</td>
+                        <td className={entry.kind} title={moneyExact(entry.amount)}>{entry.kind === "expense" ? "−" : "+"}{money(entry.amount)}</td>
                         <td>{entry.name}</td>
                       </tr>
                     ))}
