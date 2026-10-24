@@ -216,6 +216,19 @@ export async function getAccounts(params: {
   }>(`/admin/accounts?${query}`)
 }
 
+export async function deleteAccountExpense(id: string) {
+  try {
+    return await request<{ message: string }>(`/admin/accounts/expenses/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    })
+  } catch (error) {
+    if (error instanceof Error && error.message === "Something went wrong") {
+      throw new Error("Unable to delete this expense. Check that the server has the latest admin expense deletion update, then try again.")
+    }
+    throw error
+  }
+}
+
 export async function updateUser(id: string, payload: { isBlocked?: boolean; role?: string; reason?: string }) {
   const result = await request<{ data: AdminUser }>(`/admin/users/${id}`, {
     method: "PATCH",

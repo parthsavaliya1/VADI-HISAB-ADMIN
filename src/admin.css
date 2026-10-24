@@ -238,6 +238,23 @@ footer { padding: 18px 28px; border-top: 1px solid #e7edea; color: #89968f; font
 .drawer dd { margin: 0; font-size: 14px; }
 .drawer select { height: 40px; width: 100%; }
 .danger-solid { border: 0; background: #e15a52; color: #fff; border-radius: 10px; height: 42px; font-weight: 700; }
+.account-drawer { width: min(460px, 100%); min-width: 0; padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+.account-drawer-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; border-bottom: 1px solid #e9efec; flex-shrink: 0; }
+.account-drawer-header h2 { margin: 0; font-size: 17px; }
+.account-drawer-header .drawer-close { float: none; flex-shrink: 0; }
+.account-drawer-body { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 24px; }
+.account-drawer-body h3 { margin: 14px 0 8px; font-size: 21px; overflow-wrap: anywhere; }
+.account-entry-amount { margin: 0 0 24px; font-size: clamp(20px, 4vw, 28px); font-weight: 800; line-height: 1.35; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.account-entry-amount.amount-down { color: #b64239; }
+.account-entry-amount.amount-up { color: #16885b; }
+.account-drawer dd { overflow-wrap: anywhere; line-height: 1.5; }
+.account-drawer-body dl { margin-bottom: 0; }
+.account-drawer-footer { flex-shrink: 0; padding: 16px 24px max(16px, env(safe-area-inset-bottom)); border-top: 1px solid #e9efec; background: #fff; }
+.account-drawer-footer .alert { margin: 0 0 12px; }
+.account-drawer-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.account-drawer-actions > button { flex: 1 1 160px; min-height: 44px; height: auto; padding: 11px 14px; border-radius: 8px; font-size: 13px; line-height: 1.4; }
+.account-drawer-actions > button:disabled { opacity: .55; cursor: default; }
+.account-drawer-actions .danger-solid:hover:not(:disabled) { background: #c9463f; }
 .amount-up { color: #14915a; font-size: 28px; font-weight: 800; }
 .amount-down { color: #e15a52; font-size: 28px; font-weight: 800; }
 .home { display: grid; gap: 16px; }

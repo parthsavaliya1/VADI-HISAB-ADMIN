@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { Eye, Filter, Receipt, Search, TrendingDown, TrendingUp, Wallet } from "lucide-react"
-import { getAccounts } from "../api"
+import { deleteAccountExpense, getAccounts } from "../api"
 import type { AccountRow, AccountSeries } from "../api"
 import EmptyState from "../components/EmptyState"
 import FarmerPicker from "../components/FarmerPicker"
@@ -55,6 +55,21 @@ export default function AccountsPage() {
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState("")
   const [openRow, setOpenRow] = useState<AccountRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState("")
+  useEffect(() => {
+    if (!openRow) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !deleting) setOpenRow(null)
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.body.style.overflow = previous
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [openRow, deleting])
   const categories = draft.kind === "income"
     ? INCOME_CATEGORIES
     : draft.kind === "expense"
@@ -112,6 +127,23 @@ export default function AccountsPage() {
       userLabel: `${row.user.name} · ${row.user.phone}`,
       search: "",
     })
+  }
+
+  async function deleteExpense(row: AccountRow) {
+    if (deleting || row.kind !== "expense") return
+    if (!window.confirm(`Permanently delete this expense?\n\nFarmer: ${row.user.name} (${row.user.phone})\nCategory: ${row.category}\nAmount: ${moneyExact(row.amount)}\nDate: ${formatDate(row.date)}\nEntry ID: ${row.id}\n\nThis cannot be undone.`)) return
+    setDeleting(true)
+    setDeleteError("")
+    try {
+      await deleteAccountExpense(row.id)
+      setOpenRow(null)
+      if (rows.length === 1 && page > 1) setPage(page - 1)
+      else await load()
+    } catch (deleteError) {
+      setDeleteError(deleteError instanceof Error ? deleteError.message : "Unable to delete expense")
+    } finally {
+      setDeleting(false)
+    }
   }
 
   const incomeTrend = lastTwo(summary.series, "income")
@@ -235,7 +267,7 @@ export default function AccountsPage() {
                     <td className="notes">{row.notes || "—"}</td>
                     <td className={`num ${row.kind}`} title={moneyExact(row.amount)}>{row.kind === "expense" ? "−" : "+"}{money(row.amount)}</td>
                     <td>
-                      <button type="button" className="icon-button" title="View entry" onClick={() => setOpenRow(row)}><Eye size={16} /></button>
+                      <button type="button" className="icon-button" title="View entry" onClick={() => { setDeleteError(""); setOpenRow(row) }}><Eye size={16} /></button>
                     </td>
                   </tr>
                 ))}
@@ -247,13 +279,17 @@ export default function AccountsPage() {
       </section>
 
       {openRow && (
-        <div className="drawer-backdrop" onClick={() => setOpenRow(null)}>
-          <aside className="drawer" onClick={(event) => event.stopPropagation()}>
-            <button type="button" className="drawer-close" onClick={() => setOpenRow(null)} aria-label="Close">×</button>
+        <div className="drawer-backdrop" onClick={() => { if (!deleting) setOpenRow(null) }}>
+          <aside className="drawer account-drawer" role="dialog" aria-modal="true" aria-labelledby="account-entry-title" onClick={(event) => event.stopPropagation()}>
+            <div className="account-drawer-header">
+              <h2 id="account-entry-title">Entry details</h2>
+              <button type="button" className="drawer-close" disabled={deleting} autoFocus onClick={() => setOpenRow(null)} aria-label="Close">×</button>
+            </div>
+            <div className="account-drawer-body">
             <div className={`avatar tone-${openRow.kind}`}>{openRow.user.name.charAt(0).toUpperCase()}</div>
-            <h2>{openRow.user.name}</h2>
-            <p className={openRow.kind === "expense" ? "amount-down" : "amount-up"} title={moneyExact(openRow.amount)}>
-              {openRow.kind === "expense" ? "−" : "+"}{money(openRow.amount)}
+            <h3>{openRow.user.name}</h3>
+            <p className={`account-entry-amount ${openRow.kind === "expense" ? "amount-down" : "amount-up"}`}>
+              {openRow.kind === "expense" ? "−" : "+"}{moneyExact(openRow.amount)}
             </p>
             <dl>
               <div><dt>Type</dt><dd><span className={`badge ${openRow.kind}`}>{openRow.kind}</span></dd></div>
@@ -263,8 +299,20 @@ export default function AccountsPage() {
               <div><dt>Mobile</dt><dd>+91 {openRow.user.phone}</dd></div>
               <div><dt>Location</dt><dd>{[openRow.user.village, openRow.user.district].filter(Boolean).join(", ") || "—"}</dd></div>
               <div><dt>Notes</dt><dd>{openRow.notes || "—"}</dd></div>
+              <div><dt>Entry ID</dt><dd>{openRow.id}</dd></div>
             </dl>
-            <button type="button" className="primary" onClick={() => { focusFarmer(openRow); setOpenRow(null) }}>Show this farmer only</button>
+            </div>
+            <div className="account-drawer-footer">
+            {deleteError && <div className="alert error" role="alert">{deleteError}</div>}
+            <div className="account-drawer-actions">
+            <button type="button" className="secondary" disabled={deleting} onClick={() => { focusFarmer(openRow); setOpenRow(null) }}>Show farmer entries</button>
+            {openRow.kind === "expense" && (
+              <button type="button" className="danger-solid" disabled={deleting} onClick={() => deleteExpense(openRow)}>
+                {deleting ? "Deleting…" : "Delete expense"}
+              </button>
+            )}
+            </div>
+            </div>
           </aside>
         </div>
       )}
