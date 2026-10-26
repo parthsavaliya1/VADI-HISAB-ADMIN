@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import {
-  CircleDollarSign, Receipt, ShoppingBasket, Sprout, UsersRound, Wallet,
+  CircleDollarSign, Receipt, ShoppingBasket, UsersRound, Wallet,
 } from "lucide-react"
 import {
   Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart,
@@ -14,12 +14,12 @@ import StatCard from "../components/StatCard"
 import { formatDate, isoDaysAgo, money, moneyExact, monthLabel, nameOf, percentChange, timeAgo, todayIso, trendText } from "../utils/format"
 
 const ROLE_COLORS = [
-  { key: "farmer" as const, name: "Farmers", color: "#1f9d55" },
-  { key: "dealer" as const, name: "Dealers", color: "#7c3aed" },
-  { key: "admin" as const, name: "Admins", color: "#3b82c4" },
-  { key: "other" as const, name: "Others", color: "#f0b429" },
+  { key: "farmer" as const, name: "Farmers", color: "hsl(var(--primary))" },
+  { key: "dealer" as const, name: "Dealers", color: "hsl(var(--foreground))" },
+  { key: "admin" as const, name: "Admins", color: "hsl(var(--muted-foreground))" },
+  { key: "other" as const, name: "Others", color: "#D7B59A" },
 ]
-const BAR_COLORS = ["#1f9d55", "#7c3aed", "#f0b429", "#3b82c4", "#e15a52"]
+const BAR_COLORS = ["hsl(var(--primary))", "hsl(var(--foreground))", "#D7B59A", "hsl(var(--muted-foreground))", "#e15a52"]
 
 function axisMoney(value: unknown) {
   return money(Number(value) || 0)
@@ -176,19 +176,8 @@ export default function DashboardPage({
     <div className="home">
       <section className="welcome">
         <div>
-          <h1>Welcome, Admin</h1>
-          <p>Here&apos;s what&apos;s happening in your VADI platform today.</p>
-        </div>
-        <div className="welcome-art" aria-hidden="true">
-          <svg viewBox="0 0 280 90">
-            <path d="M0 70 C40 40 70 78 120 58 C170 38 190 72 240 48 C260 38 270 44 280 40 L280 90 L0 90 Z" fill="#8fd18a" />
-            <path d="M0 78 C50 62 90 84 150 70 C200 58 230 76 280 64 L280 90 L0 90 Z" fill="#3f8f4a" />
-            <circle cx="214" cy="22" r="10" fill="#f6c453" />
-            <rect x="168" y="48" width="28" height="12" rx="3" fill="#245c32" />
-            <circle cx="174" cy="62" r="4" fill="#1c3b24" />
-            <circle cx="190" cy="62" r="4" fill="#1c3b24" />
-          </svg>
-          <em>Smart Farming<br />Stronger Tomorrow</em>
+          <h1>Dashboard</h1>
+          <p>Welcome to your admin panel</p>
         </div>
         <div className="welcome-tools">
           <span>{new Intl.DateTimeFormat("en-IN", { weekday: "short", day: "2-digit", month: "short", year: "numeric" }).format(new Date())}</span>
@@ -231,8 +220,8 @@ export default function DashboardPage({
                   <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={24} tick={{ fontSize: 11, fill: "#607168" }} />
                   <YAxis axisLine={false} tickLine={false} width={58} tick={{ fontSize: 11, fill: "#607168" }} tickFormatter={axisMoney} domain={[0, (max: number) => Math.max(max * 1.12, 1)]} />
                   <Tooltip formatter={(value) => moneyExact(Number(value || 0))} />
-                  <Bar dataKey="income" name="Income" fill="#1f9d55" radius={[5, 5, 0, 0]} />
-                  <Bar dataKey="expense" name="Expense" fill="#ef6b63" radius={[5, 5, 0, 0]} />
+                  <Bar dataKey="income" name="Income" fill="hsl(var(--primary))" radius={[5, 5, 0, 0]} />
+                  <Bar dataKey="expense" name="Expense" fill="#D7B59A" radius={[5, 5, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </section>
@@ -248,7 +237,7 @@ export default function DashboardPage({
                   <XAxis dataKey="label" axisLine={false} tickLine={false} minTickGap={28} tick={{ fontSize: 11, fill: "#607168" }} />
                   <YAxis axisLine={false} tickLine={false} width={40} allowDecimals={false} domain={[0, (max: number) => Math.max(Math.ceil(max * 1.2), 4)]} tick={{ fontSize: 11, fill: "#607168" }} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="users" name="New users" stroke="#1f9d55" strokeWidth={3} dot={{ r: 3, fill: "#1f9d55" }} />
+                  <Line type="monotone" dataKey="users" name="New users" stroke="hsl(var(--primary))" strokeWidth={3} dot={{ r: 3, fill: "hsl(var(--primary))" }} />
                 </LineChart>
               </ResponsiveContainer>
             </section>
@@ -286,7 +275,7 @@ export default function DashboardPage({
                 <ul className="category-list">
                   {finance.categories.map((item, index) => (
                     <li key={`${item.kind}-${item.name}`}>
-                      <span className="cat-icon" style={{ background: `${BAR_COLORS[index % BAR_COLORS.length]}22`, color: BAR_COLORS[index % BAR_COLORS.length] }}>{item.name.charAt(0)}</span>
+                      <span className="cat-icon" style={{ background: "hsl(var(--secondary))", color: BAR_COLORS[index % BAR_COLORS.length] }}>{item.name.charAt(0)}</span>
                       <div>
                         <b>{item.name}</b>
                         <small>{item.count.toLocaleString("en-IN")} {item.kind}</small>
@@ -378,15 +367,16 @@ export default function DashboardPage({
                 </ul>
               )}
             </section>
-            <aside className="promo-card">
-              <div>
-                <h3>More Farmers.<br />More Opportunities.</h3>
-                <p>Grow the network and help farmers across Gujarat keep their hisab in one place.</p>
-                <button type="button" className="primary" onClick={onOpenUsers}>Manage Users</button>
-              </div>
-              <Sprout size={72} />
-            </aside>
+
           </div>
+          <section className="home-card">
+            <div className="home-card-head"><h2>Quick Links</h2></div>
+            <div className="quick-links">
+              <button onClick={onOpenAccounts}><Wallet size={20} /><span>Manage Accounts</span></button>
+              <button onClick={onOpenListings}><ShoppingBasket size={20} /><span>Manage Listings</span></button>
+              <button onClick={onOpenUsers}><UsersRound size={20} /><span>Manage Users</span></button>
+            </div>
+          </section>
         </>
       )}
     </div>

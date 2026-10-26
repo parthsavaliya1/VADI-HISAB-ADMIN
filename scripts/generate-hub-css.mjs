@@ -1,0 +1,21 @@
+// Rebuild the copied landing page utilities using the source admin's Tailwind runtime.
+import { createRequire } from 'node:module';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const source = path.resolve(root, '../../VADI-SELL/VADI-ADMIN');
+const require = createRequire(path.join(source, 'package.json'));
+const { compile } = require('@tailwindcss/node');
+const { Scanner } = require('@tailwindcss/oxide');
+const scanner = new Scanner({ sources: [] });
+const candidates = scanner.scanFiles(['src/pages/HomePage.tsx', 'src/components/HubFooter.tsx'].map(file => ({ content: readFileSync(path.join(root, file), 'utf8'), extension: 'tsx' })));
+const sourceCss = readFileSync(path.join(source, 'app/globals.css'), 'utf8');
+const theme = sourceCss.slice(sourceCss.indexOf('@theme inline'), sourceCss.indexOf('/* =====================================================\n   DESIGN TOKENS'));
+const result = await compile('@import "tailwindcss/theme.css";\n' + theme + '\n@import "tailwindcss/utilities.css";', { base: source, onDependency() {} });
+const postcss = require('postcss');
+const ast = postcss.parse(result.build(candidates));
+ast.walkAtRules('layer', rule => { if (rule.nodes) rule.replaceWith(...rule.nodes); else rule.remove(); });
+ast.walkRules(rule => { rule.selector = rule.selector.replaceAll(':root, :host', ':scope').replaceAll(':root', ':scope'); });
+const utilities = ast.toString();
+writeFileSync(path.join(root, 'src/hub-utilities.css'), '/* Generated from the copied VADI-ADMIN hub. Run node scripts/generate-hub-css.mjs to rebuild. */\n@scope (.hub-page) {\n' + utilities + '\n}\n');

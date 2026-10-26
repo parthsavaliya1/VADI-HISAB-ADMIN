@@ -1,4 +1,4 @@
-import { Leaf, X } from "lucide-react"
+import { X } from "lucide-react"
 import { LayoutDashboard, ShieldCheck, ShoppingBasket, Stethoscope, UsersRound, Wallet } from "lucide-react"
 import type { Page } from "../types"
 
@@ -24,22 +24,21 @@ export default function Sidebar({
 }) {
   return (
     <aside className={`sidebar ${open ? "open" : ""}`}>
-      <button className="mobile-close" onClick={onClose}><X /></button>
+      <button className="mobile-close" aria-label="Close navigation" onClick={onClose}><X /></button>
       <div className="brand">
-        <img className="brand-logo" src="/vadi-logo-light.png" alt="VADI" />
+        <img className="console-logo" src="/vadi-hisab-logo-original.png" alt="VADI" /><div><b>VADI Hisab</b><small>Admin</small></div>
       </div>
-      <nav>
+      <nav aria-label="Admin navigation">
         {nav.map(({ id, label, icon: Icon }) => (
-          <button key={id} className={page === id ? "active" : ""} onClick={() => onNavigate(id)}>
+          <button key={id} aria-current={page === id ? "page" : undefined} className={page === id ? "active" : ""} onClick={() => onNavigate(id)}>
             <Icon size={19} />
-            {label}
+            <span>{label}</span>
           </button>
         ))}
       </nav>
-      <div className="sidebar-note">
-        <Leaf />
-        <b>ખેડૂત સાથે<br />સમૃદ્ધ ગુજરાત</b>
-        <small>Growing Together<br />with Farmers</small>
+      <div className="sidebar-account">
+        <div className="avatar">A</div>
+        <div><b>Administrator</b><small>Hisab workspace</small></div>
       </div>
     </aside>
   )

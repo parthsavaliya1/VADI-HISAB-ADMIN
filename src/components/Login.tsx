@@ -1,3 +1,4 @@
+import HubFooter from "./HubFooter"
 import { useState } from "react"
 import type { FormEvent } from "react"
 import { Leaf, LoaderCircle } from "lucide-react"
@@ -36,30 +37,29 @@ export default function Login({ onLogin }: { onLogin: (user: SessionUser) => voi
 
   return (
     <main className="login-page">
+      <div className="login-brand"><a href="/" aria-label="VADI Hisab home"><img src="/vadi-hisab-logo-original.png" alt="VADI Hisab" /></a></div>
       <section className="login-visual">
-        <div className="brand brand-light">
-          <img className="brand-logo" src="/vadi-logo-light.png" alt="VADI" />
-        </div>
         <div className="login-message">
-          <span className="eyebrow">Built for farmers, managed with care</span>
-          <h1>Grow impact.<br />Manage smarter.</h1>
-          <p>A single place to support VADI users, moderate the community, and run daily operations.</p>
+          <span className="eyebrow">Fresh beginnings, every day</span>
+          <h1>Good things grow<br />with you.</h1>
+          <p>Your space to support farmers, manage accounts, and bring your community a little closer.</p>
         </div>
       </section>
       <section className="login-card-wrap">
         <form className="login-card" onSubmit={submit}>
           <div className="login-icon"><Leaf size={28} /></div>
-          <h2>Admin sign in</h2>
+          <span className="login-eyebrow">Hisab workspace</span>
+          <h2>Welcome back</h2>
           <p>Use your registered VADI admin mobile number.</p>
-          <label>Mobile number</label>
+          <label htmlFor="login-phone">Mobile number</label>
           <div className="phone-input">
             <span>+91</span>
-            <input autoFocus={!sessionId} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98765 43210" disabled={!!sessionId} required />
+            <input id="login-phone" type="tel" autoComplete="tel-national" autoFocus={!sessionId} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="98765 43210" disabled={!!sessionId} required />
           </div>
           {sessionId && (
             <>
-              <label>One-time password</label>
-              <input className="text-input" autoFocus value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Enter 6-digit OTP" required />
+              <label htmlFor="login-otp">One-time password</label>
+              <input id="login-otp" inputMode="numeric" autoComplete="one-time-code" className="text-input" autoFocus value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="Enter 6-digit OTP" required />
             </>
           )}
           {error && <div className="alert error">{error}</div>}
@@ -74,6 +74,7 @@ export default function Login({ onLogin }: { onLogin: (user: SessionUser) => voi
           )}
         </form>
       </section>
+      <div className="hub-page login-hub-footer"><HubFooter /></div>
     </main>
   )
 }

@@ -1,0 +1,23 @@
+/* Source hub reset isolated from the legacy admin element rules. */
+.hub-page { font-family: var(--font-geist-sans), system-ui, sans-serif; font-size: 16px; line-height: 1.5; color: hsl(var(--foreground)); }
+.hub-page *, .hub-page *::before, .hub-page *::after { box-sizing: border-box; border: 0 solid; }
+.hub-page :where(h1,h2,h3,p,ul,ol) { margin: 0; }
+.hub-page :where(ul,ol) { padding: 0; list-style: none; }
+.hub-page :where(a) { color: inherit; text-decoration: inherit; }
+.hub-page :where(img,svg) { display: block; vertical-align: middle; }
+.hub-page :where(img) { max-width: 100%; height: auto; }
+.hub-page :where(header) { height: auto; padding: 0; display: block; }
+.hub-page :where(footer) { text-align: initial; margin: 0; padding: 0; font-size: inherit; }
+.hub-page .section-container { max-width: 72rem; width: 100%; margin-inline: auto; padding-inline: 1rem; }
+@media(min-width:640px) { .hub-page .section-container { padding-inline: 1.5rem; } }
+@media(min-width:1024px) { .hub-page .section-container { padding-inline: 2rem; } }
+/* Base component styles above deliberately have lower specificity than copied utilities. */
+@keyframes hub-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes hub-swap { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.hub-in { animation: hub-in 560ms cubic-bezier(.22,1,.36,1) both; }
+.hub-swap { animation: hub-swap 280ms cubic-bezier(.22,1,.36,1) both; }
+.hub-page .hub-footer { border-top: 1px solid hsl(var(--border)); margin-top: auto; padding-block: 24px; color: hsl(var(--muted-foreground)); }
+.login-hub-footer { grid-column: 1 / -1; width: 100%; }
+.admin-hub-footer { margin-top: 32px; }
+@media(prefers-reduced-motion:reduce) { .hub-in,.hub-swap { animation: none; } }
+.hub-page img.hub-hisab-logo { width: 80px; height: 64px; object-fit: contain; flex-shrink: 0; }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react"
 import { getMe, session } from "./api"
 import type { MarketListing, SessionUser } from "./api"
+import HomePage from "./pages/HomePage"
+import HubFooter from "./components/HubFooter"
 import Header from "./components/Header"
 import Loading from "./components/Loading"
 import Login from "./components/Login"
@@ -32,8 +34,10 @@ export default function App() {
     }).catch(() => session.clear()).finally(() => setChecking(false))
   }, [])
 
+  if (!window.location.pathname.startsWith("/admin")) return <HomePage />
+
   if (checking) return <div className="app-loading"><Loading /></div>
-  if (!authUser) return <Login onLogin={setAuthUser} />
+  if (!authUser) return <Login onLogin={(user) => { window.history.replaceState(null, "", "/admin/dashboard"); setAuthUser(user) }} />
 
   const content = listing
     ? <ListingViewPage listing={listing} onBack={() => setListing(null)} />
@@ -55,9 +59,8 @@ export default function App() {
     <div className="app-shell">
       <Sidebar page={page} open={mobileNav} onNavigate={(next) => { setPage(next); setProfileUserId(null); setListing(null); setMobileNav(false) }} onClose={() => setMobileNav(false)} />
       <div className="main-shell">
-        <Header user={authUser} query={search} onQuery={setSearch} onMenu={() => setMobileNav(true)} onSignOut={() => { session.clear(); setAuthUser(null) }} />
-        <main className="content">{content}</main>
-        <footer>© {new Date().getFullYear()} VADI. Built for farmers, by farmers.</footer>
+        <Header title={listing ? "Market listing" : profileUserId ? "User profile" : ({ dashboard: "Dashboard", users: "Users", accounts: "Income & Expense", listings: "Market Listings", "crop-doctor": "Crop Doctor", moderation: "Reports & Safety" })[page]} user={authUser} query={search} onQuery={setSearch} onMenu={() => setMobileNav(true)} onSignOut={() => { session.clear(); window.history.replaceState(null, "", "/admin/login"); setAuthUser(null) }} />
+        <main className="content">{page === "dashboard" && !listing && !profileUserId && <label className="console-dashboard-search search-box"><input aria-label="Search dashboard" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search users, mobile, village or district" /></label>}{content}<div className="hub-page admin-hub-footer"><HubFooter /></div></main>
       </div>
       {mobileNav && <button className="overlay" onClick={() => setMobileNav(false)} aria-label="Close menu" />}
     </div>
