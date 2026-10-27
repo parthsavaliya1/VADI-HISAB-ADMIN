@@ -203,12 +203,29 @@ export default function DashboardPage({
       {busy && !data ? <Loading /> : (
         <>
           <div className="stat-grid home-stats">
+            <StatCard label="Daily Active Users" value={data?.dailyActiveUsers ? data.dailyActiveUsers.today.toLocaleString("en-IN") : "—"} note="Today · UTC · excludes admins" icon={UsersRound} tone="green" points={data?.dailyActiveUsers?.days.map((item) => item.users) || []} />
             <StatCard label="Total Users" value={periodUsers.toLocaleString("en-IN")} note={`${rangeName} · ${trendText(percentChange(periodUsers, data?.previousUsers || 0)).replace("last month", "previous period")}`} direction={periodUsers >= (data?.previousUsers || 0) ? "up" : "down"} icon={UsersRound} tone="green" points={signups.map((item) => item.users)} />
             <StatCard label="Market Listings" value={periodListings.toLocaleString("en-IN")} note={rangeName} icon={ShoppingBasket} tone="blue" points={rangedGrowth.map((item) => item.listings)} />
             <StatCard label="Dealer Bills" value={periodBills.toLocaleString("en-IN")} note={rangeName} icon={Receipt} tone="green" points={rangedGrowth.map((item) => item.dealerBills)} />
             <StatCard label="Total Income" value={money(finance?.income || 0)} title={moneyExact(finance?.income || 0)} note={`${rangeName} · ${trendText(percentChange(finance?.income || 0, finance?.previousIncome || 0)).replace("last month", "previous period")}`} direction={(finance?.income || 0) >= (finance?.previousIncome || 0) ? "up" : "down"} icon={Wallet} tone="green" points={months.map((item) => item.income)} />
             <StatCard label="Total Expense" value={money(finance?.expense || 0)} title={moneyExact(finance?.expense || 0)} note={`${rangeName} · ${trendText(percentChange(finance?.expense || 0, finance?.previousExpense || 0)).replace("last month", "previous period")}`} direction={(finance?.expense || 0) <= (finance?.previousExpense || 0) ? "up" : "down"} icon={CircleDollarSign} tone="red" points={months.map((item) => item.expense)} />
           </div>
+
+          <section className="home-card">
+            <div className="home-card-head"><h2>Daily Active Users</h2><span>{rangeName} · UTC</span></div>
+            <p className="muted">Unique signed-in users who opened HISAB each day. Repeat opens count once; admin accounts are excluded. History starts when app-open tracking began.</p>
+            {!data?.dailyActiveUsers ? <p className="muted">Activity data unavailable. Update the backend to enable this metric.</p> : (
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={data.dailyActiveUsers.days}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="day" tickFormatter={axisLabel} minTickGap={35} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip labelFormatter={(value) => `${String(value)} (UTC)`} />
+                  <Bar dataKey="users" name="Active users" fill="#1f9d55" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </section>
 
           <div className="home-charts">
             <section className="home-card">

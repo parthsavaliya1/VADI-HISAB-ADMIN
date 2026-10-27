@@ -20,6 +20,7 @@ export type AdminUser = {
 }
 
 export type DashboardData = {
+  dailyActiveUsers?: { today: number; timezone: string; days: Array<{ day: string; users: number }> }
   metrics: {
     totalUsers: number
     farmers: number
