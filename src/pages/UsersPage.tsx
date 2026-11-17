@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Eye, Filter, Search, UserCheck, UserPlus, UserX, Users } from "lucide-react"
-import { getUsers } from "../api"
+import { Eye, Filter, Search, Trash2, UserCheck, UserPlus, UserX, Users } from "lucide-react"
+import { deleteUser, getUsers } from "../api"
 import type { AdminUser, UserPlace, UserSummary } from "../api"
 import EmptyState from "../components/EmptyState"
 import Loading from "../components/Loading"
@@ -55,6 +55,8 @@ export default function UsersPage({ onOpenUser }: { onOpenUser: (userId: string)
   const [total, setTotal] = useState(0)
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState("")
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [notice, setNotice] = useState("")
   const load = useCallback(async () => {
     setBusy(true)
     setError("")
@@ -102,6 +104,24 @@ export default function UsersPage({ onOpenUser }: { onOpenUser: (userId: string)
     setDraft(emptyFilters)
     setApplied(emptyFilters)
     setPage(1)
+  }
+
+  async function removeUser(user: AdminUser) {
+    if (deletingId) return
+    if (!window.confirm(`Permanently delete ${nameOf(user)} (+91 ${user.phone})?\n\nUser ID: ${user.id}\n\nThis deletes the account and all related entries, including income, expenses, crops, bills, posts, comments, stories, and advisory records. This cannot be undone.`)) return
+    setDeletingId(user.id)
+    setError("")
+    setNotice("")
+    try {
+      await deleteUser(user.id)
+      setNotice("User and all related entries deleted successfully.")
+      if (users.length === 1 && page > 1) setPage(page - 1)
+      else await load()
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete user")
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const totalBase = Math.max(summary.total - summary.newThisMonth, 0)
@@ -190,6 +210,7 @@ export default function UsersPage({ onOpenUser }: { onOpenUser: (userId: string)
         </div>
 
         {error && <div className="alert error">{error}</div>}
+        {notice && <div className="alert" role="status">{notice}</div>}
         {busy ? <Loading /> : !users.length ? <EmptyState title="No users found" detail="Try another search or clear the filters." /> : (
           <div className="table-wrap">
             <table className="directory-table">
@@ -227,6 +248,7 @@ export default function UsersPage({ onOpenUser }: { onOpenUser: (userId: string)
                       <td><span className={`status ${user.isBlocked ? "blocked" : "active"}`}>{user.isBlocked ? "Blocked" : "Active"}</span></td>
                       <td>
                         <button type="button" className="icon-button" title="View farmer profile" onClick={() => onOpenUser(user.id)}><Eye size={16} /></button>
+                        <button type="button" className="icon-button danger-button" title="Delete user and all related entries" aria-label={`Delete ${nameOf(user)} and all related entries`} disabled={deletingId !== null} onClick={() => removeUser(user)}><Trash2 size={16} />{deletingId === user.id && "Deleting…"}</button>
                       </td>
                     </tr>
                   )

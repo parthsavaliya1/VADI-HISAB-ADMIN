@@ -176,6 +176,10 @@ export async function getUsers(params: {
   return request<PaginatedUsers>(`/admin/users?${query}`)
 }
 
+export async function deleteUser(id: string) {
+  return request<{ success: boolean; message: string }>(`/admin/users/${encodeURIComponent(id)}`, { method: "DELETE" })
+}
+
 export type AccountRow = {
   id: string
   kind: "income" | "expense"

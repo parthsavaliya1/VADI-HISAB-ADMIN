@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 import { ArrowLeft, MapPin, Sprout, Tractor, Wallet } from "lucide-react"
-import { getFarmer, updateUser } from "../api"
+import { deleteUser, getFarmer, updateUser } from "../api"
 import type { FarmerRecord } from "../api"
 import Loading from "../components/Loading"
 import { formatDate, money, moneyExact, nameOf } from "../utils/format"
@@ -20,6 +20,7 @@ export default function FarmerPage({ userId, onBack }: { userId: string; onBack:
   const [farmer, setFarmer] = useState<FarmerRecord | null>(null)
   const [busy, setBusy] = useState(true)
   const [error, setError] = useState("")
+  const [deleting, setDeleting] = useState(false)
 
   const load = useCallback(async () => {
     setBusy(true)
@@ -36,12 +37,26 @@ export default function FarmerPage({ userId, onBack }: { userId: string; onBack:
   useEffect(() => { load() }, [load])
 
   async function patch(payload: { isBlocked?: boolean; role?: string }) {
-    if (!farmer) return
+    if (!farmer || deleting) return
     try {
       await updateUser(farmer.id, payload)
       await load()
     } catch (patchError) {
       setError(patchError instanceof Error ? patchError.message : "Update failed")
+    }
+  }
+
+  async function removeUser() {
+    if (!farmer || deleting) return
+    if (!window.confirm(`Permanently delete ${nameOf(farmer)} (+91 ${farmer.phone})?\n\nUser ID: ${farmer.id}\n\nThis deletes the account and all related entries, including income, expenses, crops, bills, posts, comments, stories, and advisory records. This cannot be undone.`)) return
+    setDeleting(true)
+    setError("")
+    try {
+      await deleteUser(farmer.id)
+      onBack()
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Unable to delete user")
+      setDeleting(false)
     }
   }
 
@@ -75,14 +90,17 @@ export default function FarmerPage({ userId, onBack }: { userId: string; onBack:
             <div className="profile-controls">
               <label>
                 Role
-                <select value={farmer.role} onChange={(event) => patch({ role: event.target.value })}>
+                <select disabled={deleting} value={farmer.role} onChange={(event) => patch({ role: event.target.value })}>
                   <option value="farmer">Farmer</option>
                   <option value="dealer">Dealer</option>
                   <option value="admin">Admin</option>
                 </select>
               </label>
-              <button type="button" className={farmer.isBlocked ? "primary" : "danger-solid"} onClick={() => patch({ isBlocked: !farmer.isBlocked })}>
+              <button type="button" disabled={deleting} className={farmer.isBlocked ? "primary" : "danger-solid"} onClick={() => patch({ isBlocked: !farmer.isBlocked })}>
                 {farmer.isBlocked ? "Unblock user" : "Block user"}
+              </button>
+              <button type="button" className="danger-solid" disabled={deleting} onClick={removeUser}>
+                {deleting ? "Deleting…" : "Delete user & all entries"}
               </button>
             </div>
           </section>
