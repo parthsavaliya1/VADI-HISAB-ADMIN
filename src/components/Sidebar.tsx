@@ -3,6 +3,7 @@ import { LayoutDashboard, ShieldCheck, ShoppingBasket, Stethoscope, UsersRound, 
 import type { Page } from "../types"
 
 const nav = [
+  { id: "translations" as Page, label: "Translations", icon: LayoutDashboard },
   { id: "dashboard" as Page, label: "Dashboard", icon: LayoutDashboard },
   { id: "users" as Page, label: "Users", icon: UsersRound },
   { id: "accounts" as Page, label: "Income & Expense", icon: Wallet },

@@ -1,3 +1,4 @@
+import TranslationsPage from "./pages/TranslationsPage"
 import { useEffect, useState } from "react"
 import { getMe, session } from "./api"
 import type { MarketListing, SessionUser } from "./api"
@@ -53,13 +54,13 @@ export default function App() {
           ? <ListingsPage onView={setListing} />
           : page === "crop-doctor"
             ? <CropDoctorPage onOpenUser={setProfileUserId} />
-            : <ReviewQueuePage kind="reports" />
+            : page === "translations" ? <TranslationsPage /> : <ReviewQueuePage kind="reports" />
 
   return (
     <div className="app-shell">
       <Sidebar page={page} open={mobileNav} onNavigate={(next) => { setPage(next); setProfileUserId(null); setListing(null); setMobileNav(false) }} onClose={() => setMobileNav(false)} />
       <div className="main-shell">
-        <Header title={listing ? "Market listing" : profileUserId ? "User profile" : ({ dashboard: "Dashboard", users: "Users", accounts: "Income & Expense", listings: "Market Listings", "crop-doctor": "Crop Doctor", moderation: "Reports & Safety" })[page]} user={authUser} query={search} onQuery={setSearch} onMenu={() => setMobileNav(true)} onSignOut={() => { session.clear(); window.history.replaceState(null, "", "/admin/login"); setAuthUser(null) }} />
+        <Header title={listing ? "Market listing" : profileUserId ? "User profile" : ({ dashboard: "Dashboard", users: "Users", accounts: "Income & Expense", listings: "Market Listings", "crop-doctor": "Crop Doctor", moderation: "Reports & Safety", translations: "Translations" })[page]} user={authUser} query={search} onQuery={setSearch} onMenu={() => setMobileNav(true)} onSignOut={() => { session.clear(); window.history.replaceState(null, "", "/admin/login"); setAuthUser(null) }} />
         <main className="content">{page === "dashboard" && !listing && !profileUserId && <label className="console-dashboard-search search-box"><input aria-label="Search dashboard" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search users, mobile, village or district" /></label>}{content}<div className="hub-page admin-hub-footer"><HubFooter /></div></main>
       </div>
       {mobileNav && <button className="overlay" onClick={() => setMobileNav(false)} aria-label="Close menu" />}

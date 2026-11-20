@@ -410,3 +410,17 @@ export async function sendBroadcast(payload: { title: string; body: string }) {
   })
 }
 
+
+
+export type TranslationCatalog = { [key: string]: string | TranslationCatalog }
+export type TranslationManifest = { version: number; release?: string; releases?: string[]; languages: Record<string, { version: number; file: string; sha256?: string }> }
+export type TranslationState = { manifest: TranslationManifest; catalogs: Record<string, TranslationCatalog>; languages: string[] }
+export type TranslationDraft = { revision: string; updatedAt: string; catalog: TranslationCatalog }
+export const translationApi = {
+  state: () => request<TranslationState>("/admin/translations"),
+  draft: (lang: string) => request<TranslationDraft | null>(`/admin/translations/drafts/${lang}`),
+  saveDraft: (lang: string, catalog: TranslationCatalog, expectedRevision: string | null) => request<TranslationDraft>(`/admin/translations/drafts/${lang}`, { method: "PUT", body: JSON.stringify({ catalog, expectedRevision }) }),
+  validate: (catalog: TranslationCatalog, baseline: TranslationCatalog) => request<{ keys: number }>("/admin/translations/validate", { method: "POST", body: JSON.stringify({ catalog, baseline }) }),
+  publish: (catalogs: Record<string, TranslationCatalog>, expectedVersion: number) => request<TranslationManifest>("/admin/translations/publish", { method: "POST", body: JSON.stringify({ catalogs, expectedVersion }) }),
+  rollback: (release: string, expectedVersion: number) => request<TranslationManifest>("/admin/translations/rollback", { method: "POST", body: JSON.stringify({ release, expectedVersion }) }),
+}
